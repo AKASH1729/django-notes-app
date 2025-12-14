@@ -14,7 +14,8 @@ services:
       - notes-app-nw
 
   django_app:
-    image: 'akas11729/node-app'
+     build:
+       context: .
     image: django_app
     container_name: "django_cont"
     ports:
