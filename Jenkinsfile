@@ -1,34 +1,51 @@
-pipeline{
+@Library("Shared") _
+pipeline {
     agent { label 'vinod' }
-    
-    stages{
-        stage("Code Clone"){
-            steps{
-                echo "Code Clone Stage"
-                git url: "https://github.com/AKASH1729/django-notes-app.git", branch: "main"
-            }
-        }
-        stage("Code Build & Test"){
-            steps{
-                echo "Code Build Stages"
-                sh "docker build -t node-app ."
-            }
-        }
-        stage("Push To DockerHub"){
-            steps{
-                withCredentials([usernamePassword(
-                    credentialsId:"dockerHubCred",
-                    usernameVariable:"dockerHubUser", 
-                    passwordVariable:"dockerHubPass")]){
-                sh 'echo $dockerHubPass | docker login -u $dockerHubUser --password-stdin'
-                sh "docker image tag node-app:latest ${env.dockerHubUser}/node-app:latest"
-                sh "docker push ${env.dockerHubUser}/node-app:latest"
+
+    stages {
+
+        stage("Code Clone") {
+            steps {
+                script {
+                    code_checkout(
+                        "https://github.com/AKASH1729/django-notes-app.git",
+                        "main"
+                    )
                 }
             }
         }
-        stage("Deploy"){
-            steps{
-                sh "docker compose down && docker compose up -d --build"
+
+        stage("Code Build & Test") {
+            steps {
+                script {
+                    docker_build(
+                        "notes-app",
+                        "latest",
+                        "akas11729"
+                    )
+                }
+            }
+        }
+
+        stage("Push To DockerHub") {
+            steps {
+                script {
+                    docker_push(
+                        "notes-app",
+                        "latest",
+                        "akas11729"
+                    )
+                }
+            }
+        }
+
+        stage("Deploy") {
+            steps {
+                script {
+                    docker_compose(
+                        "docker compose down && docker compose up -d --build"
+                    )
+                }
             }
         }
     }
